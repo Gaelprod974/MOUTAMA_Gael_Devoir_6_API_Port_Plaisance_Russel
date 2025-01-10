@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord</title>
+</head>
+<body>
+    <h1>Tableau de Bord - Port Russell</h1>
+    <p id="welcomeMessage"></p>
+    <p id="date"></p>
+
+    <table id="reservationsTable">
+        <thead>
+            <tr>
+                <th>Catway</th>
+                <th>Client</th>
+                <th>Bateau</th>
+                <th>Début</th>
+                <th>Fin</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button id="logoutBtn">Se déconnecter</button>
+
+    <script>
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/index.html';
+        });
+
+        async function fetchReservations() {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/catways/1/reservations', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            const tableBody = document.querySelector('#reservationsTable tbody');
+            tableBody.innerHTML = '';
+            data.forEach(reservation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${reservation.catwayNumber}</td>
+                    <td>${reservation.clientName}</td>
+                    <td>${reservation.boatName}</td>
+                    <td>${new Date(reservation.startDate).toLocaleDateString()}</td>
+                    <td>${new Date(reservation.endDate).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function displayUserInfo() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                const decoded = jwt_decode(token);
+                document.getElementById('welcomeMessage').textContent = `Bienvenue, ${decoded.username}`;
+                document.getElementById('date').textContent = `Date: ${new Date().toLocaleDateString()}`;
+                fetchReservations();
+            } else {
+                window.location.href = '/index.html';
+            }
+        }
+
+        displayUserInfo();
+    </script>
+</body>
+</html>
